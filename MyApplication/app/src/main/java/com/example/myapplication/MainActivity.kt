@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.tasks.Task
 import com.google.gson.annotations.SerializedName
 import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
 import com.yalantis.ucrop.UCrop
@@ -45,7 +46,7 @@ class MainActivity : AppCompatActivity() {
     private val CAPTURE_IMAGE_REQUEST = 2
     private val CROP_IMAGE_REQUEST = 3
 
-    private val apiClient = ApiClient.getApiClient()
+    //private val apiClient = ApiClient.getApiClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,13 +86,13 @@ class MainActivity : AppCompatActivity() {
 //                    imageView.setImageURI(selectedImageUri)
 //                    selectedImageUri?.let {
 //                        val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, selectedImageUri)
-//                        extractTextFromImage(bitmap)
+//                        //extractTextFromImage(bitmap)
 //                    }
 //                }
 //                CAPTURE_IMAGE_REQUEST -> {
 //                    val imageBitmap = data?.extras?.get("data") as Bitmap
 //                    imageView.setImageBitmap(imageBitmap)
-//                    extractTextFromImage(imageBitmap)
+//                    //extractTextFromImage(imageBitmap)
 //                }
 //            }
 //        }
@@ -118,10 +119,29 @@ class MainActivity : AppCompatActivity() {
                     // 여기서 이미지를 서버에 업로드하고 OCR을 적용하는 코드를 추가할 수 있습니다.
                     resultUri?.let {
                         val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, it)
-                        uploadImageToServer(bitmap)
+                        //uploadImageToServer(bitmap)
+                        //밑에건 일단 해보고 오자
+                        extractTextAndUploadImage(bitmap)
                     }
                 }
             }
+        }
+    }
+
+    private fun extractTextAndUploadImage(bitmap: Bitmap) {
+        // Crop된 이미지를 OCR을 수행하여 텍스트를 추출합니다.
+        val image = InputImage.fromBitmap(bitmap, 0)
+        val recognizer = TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build())
+
+        val result: Task<Text> = recognizer.process(image)
+        result.addOnSuccessListener { visionText ->
+            val resultText = visionText.text
+            inputText.setText(resultText)
+
+            // Crop된 이미지를 API에 업로드합니다.
+            //uploadImageToServer(bitmap)
+        }.addOnFailureListener { e ->
+            e.printStackTrace()
         }
     }
 
@@ -157,6 +177,8 @@ class MainActivity : AppCompatActivity() {
             storageDir      /* directory */
         )
         // 파일의 경로를 반환
+        Log.i("ImageFileName", "Image file name: $imageFileName")
+        println("이런"+imageFileName)
         return image
     }
 
@@ -179,66 +201,72 @@ class MainActivity : AppCompatActivity() {
     }
 
     //api에 이미지 전송 후 ocr 적용
-    private fun uploadImageToServer(bitmap: Bitmap) {
-        val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-        val byteArray = outputStream.toByteArray()
-        val requestBody = RequestBody.create(MediaType.parse("image/jpeg"), byteArray)
-
-        val service = apiClient.create(ImageUploadAPI::class.java)
-        val call = service.uploadImage(requestBody)
-
-        call.enqueue(object : Callback<ImageResponse> {
-            override fun onResponse(call: Call<ImageResponse>, response: Response<ImageResponse>) {
-                if (response.isSuccessful) {
-                    println("얏호")
-                    val imageResponse = response.body()
-                    // 서버에서 반환한 이미지 URL 또는 다른 필요한 정보를 사용하여 OCR API를 호출하고 결과를 처리
-                } else {
-                    // 서버로부터 응답이 실패한 경우 처리
-                    println("오노우")
-                    Log.e("API Error", "Failed to upload image: ${response.code()}")
-                }
-            }
-
-            override fun onFailure(call: Call<ImageResponse>, t: Throwable) {
-                // 통신 실패 시 처리
-                println("이런 미띤")
-                Log.e("API Error", "Failed to upload image", t)
-            }
-        })
-    }
+//    private fun uploadImageToServer(bitmap: Bitmap) {
+//        println("api접속?")
+//
+//        val imageView = ImageView(this)
+//        imageView.setImageBitmap(bitmap)
+//        //println("Bitmap 정보: Width=${bitmap.width}, Height=${bitmap.height}")
+//        val outputStream = ByteArrayOutputStream()
+//        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+//        val byteArray = outputStream.toByteArray()
+//        val requestBody = RequestBody.create(MediaType.parse("image/jpeg"), byteArray)
+//        println(requestBody)
+//
+//        val service = apiClient.create(ImageUploadAPI::class.java)
+//        val call = service.uploadImage(requestBody)
+//
+//        call.enqueue(object : Callback<ImageResponse> {
+//            override fun onResponse(call: Call<ImageResponse>, response: Response<ImageResponse>) {
+//                if (response.isSuccessful) {
+//                    println("얏호")
+//                    val imageResponse = response.body()
+//                    // 서버에서 반환한 이미지 URL 또는 다른 필요한 정보를 사용하여 OCR API를 호출하고 결과를 처리
+//                } else {
+//                    // 서버로부터 응답이 실패한 경우 처리
+//                    println("오노우")
+//                    Log.e("API Error", "Failed to upload image: ${response.code()}")
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<ImageResponse>, t: Throwable) {
+//                // 통신 실패 시 처리
+//                println("이런 미띤")
+//                Log.e("API Error", "Failed to upload image", t)
+//            }
+//        })
+//    }
 }
 
 //postman 주소 연결
-object ApiClient {
-    private const val BASE_URL = "https://l24fiwe6s2.apigw.ntruss.com/custom/v1/29599/ec9ba461bdc586ea062462533b591567bb811be98192d90bd43dc52b083ae2b7/general/"
-    fun getApiClient(): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(provideOkHttpClient(AppInterceptor()))
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
-
-    private fun provideOkHttpClient(interceptor: AppInterceptor): OkHttpClient
-            = OkHttpClient.Builder().run {
-        addInterceptor(interceptor)
-        build()
-    }
-
-    class AppInterceptor : Interceptor {
-        @Throws(IOException::class)
-        override fun intercept(chain: Interceptor.Chain) : okhttp3.Response = with(chain) {
-            val newRequest = request().newBuilder()
-                .addHeader("X-OCR-SECRET", "clVFQ1Z3d0pBcEJFVWpNcXlxTGVIUm90ekF0aFBVcnQ=")
-                .build()
-            proceed(newRequest)
-        }
-    }
-}
-
-interface ImageUploadAPI {
-    @POST("/api/upload_image")
-    fun uploadImage(@Body image: RequestBody): Call<MainActivity.ImageResponse>
-}
+//object ApiClient {
+//    private const val BASE_URL = "https://l24fiwe6s2.apigw.ntruss.com/custom/v1/29599/ec9ba461bdc586ea062462533b591567bb811be98192d90bd43dc52b083ae2b7/general/"
+//    fun getApiClient(): Retrofit {
+//        return Retrofit.Builder()
+//            .baseUrl(BASE_URL)
+//            .client(provideOkHttpClient(AppInterceptor()))
+//            .addConverterFactory(GsonConverterFactory.create())
+//            .build()
+//    }
+//
+//    private fun provideOkHttpClient(interceptor: AppInterceptor): OkHttpClient
+//            = OkHttpClient.Builder().run {
+//        addInterceptor(interceptor)
+//        build()
+//    }
+//
+//    class AppInterceptor : Interceptor {
+//        @Throws(IOException::class)
+//        override fun intercept(chain: Interceptor.Chain) : okhttp3.Response = with(chain) {
+//            val newRequest = request().newBuilder()
+//                .addHeader("X-OCR-SECRET", "clVFQ1Z3d0pBcEJFVWpNcXlxTGVIUm90ekF0aFBVcnQ=")
+//                .build()
+//            proceed(newRequest)
+//        }
+//    }
+//}
+//
+//interface ImageUploadAPI {
+//    @POST("/api/upload_image")
+//    fun uploadImage(@Body image: RequestBody): Call<MainActivity.ImageResponse>
+//}
