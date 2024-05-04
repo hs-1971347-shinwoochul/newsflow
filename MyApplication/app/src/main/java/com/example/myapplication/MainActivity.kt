@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
     private val CROP_IMAGE_REQUEST = 3
 
     private val retrofit = Retrofit.Builder()
-        .baseUrl("https://192.168.123.114:443/")
+        .baseUrl("http://192.168.123.100:5000")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
@@ -110,7 +110,7 @@ class MainActivity : AppCompatActivity() {
 
         val port = 5000 // HTTP 포트 80
         CoroutineScope(Dispatchers.IO).launch {
-            val serverAddress = InetAddress.getByName("192.168.123.110")
+            val serverAddress = InetAddress.getByName("192.168.123.100")
             val socket = Socket(serverAddress, port)
             val outputStream = socket.getOutputStream()
             val writer = BufferedWriter(OutputStreamWriter(outputStream))
@@ -138,8 +138,17 @@ class MainActivity : AppCompatActivity() {
 
             // 서버로부터의 응답을 읽어옴
             var line: String?
+            var contentStarted = false
             while (reader.readLine().also { line = it } != null) {
-                response.append(line).append('\n')
+                if (!contentStarted) {
+                    // 헤더가 아닌 첫 번째 빈 줄 이후부터 본문으로 간주
+                    if (line.isNullOrBlank()) {
+                        contentStarted = true
+                    }
+                } else {
+                    // 본문 내용을 StringBuilder에 추가
+                    response.append(line).append('\n')
+                }
             }
 
 
@@ -147,6 +156,8 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 inputText.setText(response.toString())
             }
+
+            Log.d("ServerResponse", "Response from server: $response")
 
             // 소켓 닫기
             socket.close()
