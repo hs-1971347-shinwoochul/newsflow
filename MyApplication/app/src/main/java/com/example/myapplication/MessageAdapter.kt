@@ -44,7 +44,6 @@ class MessageAdapter(private val messages: MutableList<Message>) : RecyclerView.
         }
     }
 
-
     override fun getItemCount(): Int {
         return messages.size
     }
@@ -62,39 +61,56 @@ class MessageAdapter(private val messages: MutableList<Message>) : RecyclerView.
 
     class TextMessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val textView: TextView = view.findViewById(R.id.messageText)
-        private val labelView: TextView = view.findViewById(R.id.textLabel)
+        private val imageView: ImageView = view.findViewById(R.id.profileImage)
 
         fun bind(message: Message) {
-            labelView.text = if (message.isSummary) "Summary" else "Text"
+            // 여기에 이미지 설정 코드 추가 (예: 기본 이미지 또는 URL에서 로드)
+            Glide.with(itemView.context)
+                .load(R.drawable.people) // 기본 이미지 또는 메시지의 프로필 이미지 URI
+                .into(imageView)
+
             textView.text = message.textContent
         }
     }
 
     class ImageMessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val imageView: ImageView = view.findViewById(R.id.messageImage)
-        private val labelView: TextView = view.findViewById(R.id.imageLabel)
+        private val labelView: ImageView = view.findViewById(R.id.imageLabel) // TextView 대신 ImageView
 
         fun bind(message: Message) {
-            labelView.text = "이미지"
+            // 여기에 이미지 설정 코드 추가 (예: 기본 이미지 또는 URL에서 로드)
+            Glide.with(itemView.context)
+                .load(R.drawable.image) // 기본 이미지 또는 메시지의 프로필 이미지 URI
+                .into(labelView)
+
             Glide.with(itemView.context).load(message.imageUri).into(imageView)
         }
     }
+
     class SummaryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        private val summaryLabel: TextView = view.findViewById(R.id.summaryLabel)
+        private val summaryLabel: ImageView = view.findViewById(R.id.summaryLabel) // TextView 대신 ImageView
         private val summaryMessageText: TextView = view.findViewById(R.id.summaryMessageText)
 
         fun bind(message: Message) {
-            summaryLabel.text = "summary"  // 라벨 설정
+            // 여기에 이미지 설정 코드 추가 (예: 기본 이미지 또는 URL에서 로드)
+            Glide.with(itemView.context)
+                .load(R.drawable.summary) // 기본 이미지 또는 메시지의 프로필 이미지 URI
+                .into(summaryLabel)
+
             summaryMessageText.text = message.textContent  // 요약된 메시지 표시
         }
     }
 
     class InputMessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val inputTextView: TextView = view.findViewById(R.id.inputMessageText)
-        private val labelView: TextView = view.findViewById(R.id.inputLabel)
+        private val labelView: ImageView = view.findViewById(R.id.inputLabel) // TextView 대신 ImageView
 
         fun bind(message: Message) {
-            labelView.text = "입력"
+            // 여기에 이미지 설정 코드 추가 (예: 기본 이미지 또는 URL에서 로드)
+            Glide.with(itemView.context)
+                .load(R.drawable.input) // 기본 이미지 또는 메시지의 프로필 이미지 URI
+                .into(labelView)
+
             inputTextView.text = message.textContent
         }
     }
