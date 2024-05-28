@@ -1,1 +1,1 @@
-![image](https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/77fd37b8-58e6-4587-99ec-244c61483479)
+<img width="393" alt="파이프라인" src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/9888fb42-3a96-411c-a9a0-bcd0b720080e">
