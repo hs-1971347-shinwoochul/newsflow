@@ -23,11 +23,11 @@
 </table>
 
 <p align="center">
-  <img src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/3ce8b120-1a34-4ae7-b7a8-42dc5b3b3181" alt="실행화면1" height="200" style="margin: 0 20px;">
-  <img src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/6fd51cf3-86f1-484d-ad2c-c79f3aec28ad" alt="실행화면 2" height="200" style="margin: 0 20px;">
-  <img src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/67203524-2648-453a-80e8-7b19c4ac5818" alt="실행화면 3" height="200" style="margin: 0 20px;">
-  <img src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/2aa7d32e-c564-4c26-8153-fca8f50e8fcb" alt="실행화면 4" height="200" style="margin: 0 20px;">
-  <img src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/76868e92-87c4-468f-80f0-a2fa499c4dd8" alt="실행화면 5" height="200" style="margin: 0 20px;">
+  <img src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/3ce8b120-1a34-4ae7-b7a8-42dc5b3b3181" alt="실행화면1" height="400" width="250" style="margin: 0 100px;">
+  <img src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/6fd51cf3-86f1-484d-ad2c-c79f3aec28ad" alt="실행화면 2" height="400" width="250" style="margin: 0 100px;">
+  <img src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/67203524-2648-453a-80e8-7b19c4ac5818" alt="실행화면 3" height="400" width="250" style="margin: 0 100px;">
+  <img src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/2aa7d32e-c564-4c26-8153-fca8f50e8fcb" alt="실행화면 4" height="400" width="250" style="margin: 0 100px;">
+  <img src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/76868e92-87c4-468f-80f0-a2fa499c4dd8" alt="실행화면 5" height="400" width="250" style="margin: 0 100px;">
 </p>
 
 
