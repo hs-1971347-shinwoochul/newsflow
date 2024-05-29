@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="8dp" android:layout_margin="8dp" android:background="@drawable/bubble_right" android:gravity="end">
-    <ImageView android:id="@+id/summaryLabel" android:layout_width="26dp" android:layout_height="34dp" android:src="@drawable/summary"/>
-    <TextView android:id="@+id/summaryMessageText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:padding="8dp" android:text="Summary Message" android:textSize="16sp"/>
-</LinearLayout>
