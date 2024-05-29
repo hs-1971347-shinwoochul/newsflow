@@ -52,6 +52,8 @@ import org.jsoup.select.Elements
 import java.io.*
 import java.net.InetAddress
 import java.net.Socket
+import java.net.SocketTimeoutException
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -71,7 +73,6 @@ class MainActivity : AppCompatActivity() {
     private var processedImages = 0
 
     private var currentPhotoPath: String = ""
-
 
     private val cropImage = registerForActivityResult(CropImageContract()) { result ->
         if (result.isSuccessful) {
@@ -104,7 +105,6 @@ class MainActivity : AppCompatActivity() {
         val itemTouchHelper = ItemTouchHelper(callback)
         itemTouchHelper.attachToRecyclerView(recyclerView)
 
-
         summarizeButton.setOnClickListener {
             val inputMessage = inputText.text.toString()
             if (inputMessage.isNotEmpty()) {
@@ -127,7 +127,7 @@ class MainActivity : AppCompatActivity() {
             takePhotoAndSave()
         }
 
-        crawlButton.setOnClickListener{
+        crawlButton.setOnClickListener {
             showUrlInputDialog()
         }
 
@@ -140,12 +140,10 @@ class MainActivity : AppCompatActivity() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("크롤링할 URL 입력")
 
-        // 다이얼로그에 표시될 뷰 설정
         val inputView = layoutInflater.inflate(R.layout.dialog_url_input, null)
         val urlEditText = inputView.findViewById<EditText>(R.id.urlEditText)
         builder.setView(inputView)
 
-        // OK 버튼 설정
         builder.setPositiveButton("OK") { dialog, which ->
             val url = urlEditText.text.toString()
             if (url.isNotEmpty()) {
@@ -155,19 +153,15 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 취소 버튼 설정
         builder.setNegativeButton("취소") { dialog, which ->
             dialog.dismiss()
         }
 
-        // 다이얼로그 표시
         val dialog = builder.create()
         dialog.show()
     }
 
-
     private fun startCrawling(url: String) {
-        // 입력받은 URL을 사용하여 크롤링 작업 시작
         FetchNewsTask().execute(url)
     }
 
@@ -183,7 +177,17 @@ class MainActivity : AppCompatActivity() {
                 for (element in elements) {
                     val pTags: Elements = element.select("p")
                     for (pTag in pTags) {
-                        contentBuilder.append(pTag.text()).append("\n")
+                        var text = pTag.text()
+
+                        // 이메일 제거
+                        text = text.replace(Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"), "")
+
+                        // 괄호 안의 내용 제거
+                        text = text.replace(Regex("\\(.*?\\)"), "")
+                        text = text.replace(Regex("\\[.*?\\]"), "")
+                        text = text.replace(Regex("\\{.*?\\}"), "")
+
+                        contentBuilder.append(text).append("\n")
                     }
                 }
                 contentBuilder.toString()
@@ -197,16 +201,13 @@ class MainActivity : AppCompatActivity() {
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
             if (result != null) {
-                // TextView에 가져온 내용 설정
-                addTextMessage(result.toString())
-                sendDataToServer(result)
+                // 크롤링한 데이터를 inputText에 설정
+                inputText.setText(result.toString())
             } else {
                 Toast.makeText(this@MainActivity, "뉴스 내용을 가져오지 못했습니다.", Toast.LENGTH_SHORT).show()
             }
         }
     }
-
-
 
     private fun takePhotoAndSave() {
         val photoFile: File? = try {
@@ -345,20 +346,21 @@ class MainActivity : AppCompatActivity() {
             REQUEST_PERMISSIONS
         )
     }
-    private fun addMessage(content: String, isSummary: Boolean) {//summary관련
+
+    private fun addMessage(content: String, isSummary: Boolean) {
         val viewType = if (isSummary) VIEW_TYPE_SUMMARY else VIEW_TYPE_TEXT
         messages.add(Message(textContent = content, isSummary = isSummary, viewType = viewType))
         messageAdapter.notifyItemInserted(messages.size - 1)
         recyclerView.scrollToPosition(messages.size - 1)
     }
 
-    private fun addImageMessage(imageUri: Uri) {//image관련
+    private fun addImageMessage(imageUri: Uri) {
         messages.add(Message(imageUri = imageUri, isSummary = false, viewType = VIEW_TYPE_IMAGE))
         messageAdapter.notifyItemInserted(messages.size - 1)
         recyclerView.scrollToPosition(messages.size - 1)
     }
 
-    private fun addTextMessage(text: String) {//text관련
+    private fun addTextMessage(text: String) {
         messages.add(Message(textContent = text, isSummary = false, viewType = VIEW_TYPE_TEXT))
         messageAdapter.notifyItemInserted(messages.size - 1)
         recyclerView.scrollToPosition(messages.size - 1)
@@ -369,6 +371,57 @@ class MainActivity : AppCompatActivity() {
         messageAdapter.notifyItemInserted(messages.size - 1)
         recyclerView.scrollToPosition(messages.size - 1)
     }
+
+//    private fun sendDataToServer(data: String?) {
+//        // println(data + "보냈어")
+//        Log.d("NetworkCall", "Sending data to server with data: $data")
+//        val port = 5001
+//        CoroutineScope(Dispatchers.IO).launch {
+//            try {
+//                val serverAddress = InetAddress.getByName("10.0.2.2")
+//                val socket = Socket(serverAddress, port)
+//                val outputStream = socket.getOutputStream()
+//                val writer = BufferedWriter(OutputStreamWriter(outputStream, "UTF-8"))
+//
+//                val path = "/api/summary"
+//                val postData = data ?: "default data"
+//                val requestMessage = "POST $path HTTP/1.1\r\n" +
+//                        "Host: ${serverAddress.hostName}\r\n" +
+//                        "Content-Type: application/x-www-form-urlencoded\r\n" +
+//                        "Content-Length: ${postData.length}\r\n" +
+//                        "\r\n" +
+//                        postData
+//
+//                writer.write(requestMessage)
+//                writer.flush()
+//
+//                val inputStream = socket.getInputStream()
+//                val reader = BufferedReader(InputStreamReader(inputStream))
+//                var line: String?
+//                val response = StringBuilder()
+//                var contentStarted = false
+//
+//                while (reader.readLine().also { line = it } != null) {
+//                    if (line.isNullOrBlank() && !contentStarted) {
+//                        contentStarted = true
+//                    } else if (contentStarted) {
+//                        response.append(line).append('\n')
+//                        println(response)
+//                    }
+//                }
+//
+//                withContext(Dispatchers.Main) {
+//                    addSummaryMessage(response.toString().trim())
+//                }
+//
+//                socket.close()
+//            } catch (e: IOException) {
+//                Log.e("NetworkCall", "Error in network call", e)
+//                e.printStackTrace()
+//            }
+//        }
+//    }
+
 
     private fun sendDataToServer(data: String?) {
         Log.d("NetworkCall", "Sending data to server with data: $data")
@@ -381,7 +434,7 @@ class MainActivity : AppCompatActivity() {
                 val writer = BufferedWriter(OutputStreamWriter(outputStream, "UTF-8"))
 
                 val path = "/api/summary"
-                val postData = data ?: "default data"
+                val postData = "data=" + URLEncoder.encode(data, "UTF-8")
                 val requestMessage = "POST $path HTTP/1.1\r\n" +
                         "Host: ${serverAddress.hostName}\r\n" +
                         "Content-Type: application/x-www-form-urlencoded\r\n" +
@@ -417,4 +470,5 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
 }
