@@ -21,6 +21,7 @@
 
 
 ```
+<img width="262" alt="image" src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/291e804a-cb95-4e28-b2fa-7e8015c43d3a">
 
 ```
 ## Requirements
