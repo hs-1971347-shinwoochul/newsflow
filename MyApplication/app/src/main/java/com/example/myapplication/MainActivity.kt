@@ -2,13 +2,9 @@ package com.example.myapplication
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.net.Uri
-import android.net.wifi.WifiManager
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Environment
@@ -26,24 +22,17 @@ import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.canhub.cropper.CropImage
-import com.canhub.cropper.CropImageActivity
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
-import com.canhub.cropper.CropImageView
 import com.example.myapplication.MessageAdapter.Companion.VIEW_TYPE_IMAGE
 import com.example.myapplication.MessageAdapter.Companion.VIEW_TYPE_SUMMARY
 import com.example.myapplication.MessageAdapter.Companion.VIEW_TYPE_TEXT
-import com.google.android.gms.tasks.Task
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
-import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -52,7 +41,6 @@ import org.jsoup.select.Elements
 import java.io.*
 import java.net.InetAddress
 import java.net.Socket
-import java.net.SocketTimeoutException
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.*
@@ -65,8 +53,6 @@ class MainActivity : AppCompatActivity() {
 
     private val SELECT_IMAGE_REQUEST = 1
     private val CAPTURE_IMAGE_REQUEST = 2
-    private val CRAWL_REQUEST = 3
-
     private val REQUEST_PERMISSIONS = 100
 
     private var totalImages = 0
@@ -197,7 +183,6 @@ class MainActivity : AppCompatActivity() {
                 null
             }
         }
-
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
             if (result != null) {
@@ -208,7 +193,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun takePhotoAndSave() {
         val photoFile: File? = try {
             createImageFile()
@@ -320,14 +304,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
     }
-
-    private fun getImageUriFromBitmap(bitmap: Bitmap): Uri {
-        val bytes = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
-        val path = MediaStore.Images.Media.insertImage(contentResolver, bitmap, "Title", null)
-        return Uri.parse(path)
-    }
-
     private fun hasRequiredPermissions(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
@@ -346,83 +322,27 @@ class MainActivity : AppCompatActivity() {
             REQUEST_PERMISSIONS
         )
     }
-
     private fun addMessage(content: String, isSummary: Boolean) {
         val viewType = if (isSummary) VIEW_TYPE_SUMMARY else VIEW_TYPE_TEXT
         messages.add(Message(textContent = content, isSummary = isSummary, viewType = viewType))
         messageAdapter.notifyItemInserted(messages.size - 1)
         recyclerView.scrollToPosition(messages.size - 1)
     }
-
     private fun addImageMessage(imageUri: Uri) {
         messages.add(Message(imageUri = imageUri, isSummary = false, viewType = VIEW_TYPE_IMAGE))
         messageAdapter.notifyItemInserted(messages.size - 1)
         recyclerView.scrollToPosition(messages.size - 1)
     }
-
     private fun addTextMessage(text: String) {
         messages.add(Message(textContent = text, isSummary = false, viewType = VIEW_TYPE_TEXT))
         messageAdapter.notifyItemInserted(messages.size - 1)
         recyclerView.scrollToPosition(messages.size - 1)
     }
-
     private fun addSummaryMessage(summary: String) {
         messages.add(Message(textContent = summary, isSummary = true, viewType = VIEW_TYPE_SUMMARY))
         messageAdapter.notifyItemInserted(messages.size - 1)
         recyclerView.scrollToPosition(messages.size - 1)
     }
-
-//    private fun sendDataToServer(data: String?) {
-//        // println(data + "보냈어")
-//        Log.d("NetworkCall", "Sending data to server with data: $data")
-//        val port = 5001
-//        CoroutineScope(Dispatchers.IO).launch {
-//            try {
-//                val serverAddress = InetAddress.getByName("10.0.2.2")
-//                val socket = Socket(serverAddress, port)
-//                val outputStream = socket.getOutputStream()
-//                val writer = BufferedWriter(OutputStreamWriter(outputStream, "UTF-8"))
-//
-//                val path = "/api/summary"
-//                val postData = data ?: "default data"
-//                val requestMessage = "POST $path HTTP/1.1\r\n" +
-//                        "Host: ${serverAddress.hostName}\r\n" +
-//                        "Content-Type: application/x-www-form-urlencoded\r\n" +
-//                        "Content-Length: ${postData.length}\r\n" +
-//                        "\r\n" +
-//                        postData
-//
-//                writer.write(requestMessage)
-//                writer.flush()
-//
-//                val inputStream = socket.getInputStream()
-//                val reader = BufferedReader(InputStreamReader(inputStream))
-//                var line: String?
-//                val response = StringBuilder()
-//                var contentStarted = false
-//
-//                while (reader.readLine().also { line = it } != null) {
-//                    if (line.isNullOrBlank() && !contentStarted) {
-//                        contentStarted = true
-//                    } else if (contentStarted) {
-//                        response.append(line).append('\n')
-//                        println(response)
-//                    }
-//                }
-//
-//                withContext(Dispatchers.Main) {
-//                    addSummaryMessage(response.toString().trim())
-//                }
-//
-//                socket.close()
-//            } catch (e: IOException) {
-//                Log.e("NetworkCall", "Error in network call", e)
-//                e.printStackTrace()
-//            }
-//        }
-//    }
-
-
     private fun sendDataToServer(data: String?) {
         Log.d("NetworkCall", "Sending data to server with data: $data")
         val port = 5001
@@ -470,5 +390,4 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 }

@@ -53,12 +53,6 @@ class MessageAdapter(private val messages: MutableList<Message>) : RecyclerView.
         notifyItemMoved(fromPosition, toPosition)
         return true
     }
-
-    fun addMessage(message: Message) {
-        messages.add(message)
-        notifyItemInserted(messages.size - 1)
-    }
-
     class TextMessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val textView: TextView = view.findViewById(R.id.messageText)
         private val imageView: ImageView = view.findViewById(R.id.profileImage)
