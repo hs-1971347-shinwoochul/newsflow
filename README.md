@@ -18,14 +18,6 @@
 </table>
 
 
-데이터셋
-```
-# 뉴스 기사 요약 앱 프로젝트
-
-이 리포지토리는 뉴스 기사 요약 앱 프로젝트를 위한 데이터셋을 포함하고 있습니다.
-
-## 데이터셋 다운로드
-- [news_dataset.zip](https://github.com/username/news-summary-app/raw/main/news_dataset.zip)
 
 
 ```
