@@ -18,12 +18,13 @@
 </table>
 
 
+기대효과
+<table>
+  <img width="300" alt="image" src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/92b783a3-5278-4a74-80f0-f156ef66612b">
+
+</table>
 
 
-```
-<img width="262" alt="image" src="https://github.com/hs-1971347-shinwoochul/newsflow/assets/162528651/291e804a-cb95-4e28-b2fa-7e8015c43d3a">
-
-```
 ## Requirements
 !pip install torch torchvision torchaudio
 !pip install pytorch-lightning
