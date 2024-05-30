@@ -46,26 +46,27 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var inputText: EditText
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var messageAdapter: MessageAdapter
-    private val messages = mutableListOf<Message>()
+    private lateinit var inputText: EditText // 사용자 입력 텍스트
+    private lateinit var recyclerView: RecyclerView // 메시지를 표시할 RecyclerView
+    private lateinit var messageAdapter: MessageAdapter // RecyclerView 어댑터
+    private val messages = mutableListOf<Message>() // 메시지 리스트
 
-    private val SELECT_IMAGE_REQUEST = 1
-    private val CAPTURE_IMAGE_REQUEST = 2
-    private val REQUEST_PERMISSIONS = 100
+    private val SELECT_IMAGE_REQUEST = 1 // 이미지 선택 요청 코드
+    private val CAPTURE_IMAGE_REQUEST = 2 // 이미지 캡처 요청 코드
+    private val REQUEST_PERMISSIONS = 100 // 권한 요청 코드
 
-    private var totalImages = 0
-    private var processedImages = 0
+    private var totalImages = 0 // 총 이미지 수
+    private var processedImages = 0 // 처리된 이미지 수
 
-    private var currentPhotoPath: String = ""
+    private var currentPhotoPath: String = "" // 현재 사진 경로
 
+    // 이미지 자르기 계약 등록
     private val cropImage = registerForActivityResult(CropImageContract()) { result ->
         if (result.isSuccessful) {
             val croppedUri = result.uriContent
             if (croppedUri != null) {
-                addImageMessage(croppedUri)
-                extractTextAndUploadImage(croppedUri) // 이미지 자르기 후 OCR 시작
+                addImageMessage(croppedUri) // 이미지 메시지 추가
+                extractTextAndUploadImage(croppedUri) // 이미지에서 텍스트 추출 및 업로드
             }
         } else {
             Log.e("Crop", "Error cropping image: ${result.error}")
@@ -76,27 +77,27 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        inputText = findViewById(R.id.inputText)
-        recyclerView = findViewById(R.id.recyclerView)
-        val summarizeButton = findViewById<Button>(R.id.summarizeButton)
-        val galleryButton = findViewById<ImageButton>(R.id.galleryButton)
-        val captureButton = findViewById<ImageButton>(R.id.photoButton)
-        val crawlButton = findViewById<ImageButton>(R.id.UrlButton)
+        inputText = findViewById(R.id.inputText) // 사용자 입력 텍스트 초기화
+        recyclerView = findViewById(R.id.recyclerView) // RecyclerView 초기화
+        val summarizeButton = findViewById<Button>(R.id.summarizeButton) // 요약 버튼 초기화
+        val galleryButton = findViewById<ImageButton>(R.id.galleryButton) // 갤러리 버튼 초기화
+        val captureButton = findViewById<ImageButton>(R.id.photoButton) // 사진 캡처 버튼 초기화
+        val crawlButton = findViewById<ImageButton>(R.id.UrlButton) // URL 크롤 버튼 초기화
 
-        messageAdapter = MessageAdapter(messages)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = messageAdapter
+        messageAdapter = MessageAdapter(messages) // 메시지 어댑터 초기화
+        recyclerView.layoutManager = LinearLayoutManager(this) // 레이아웃 매니저 설정
+        recyclerView.adapter = messageAdapter // 어댑터 설정
 
-        val callback = MessageTouchHelperCallback(messageAdapter)
-        val itemTouchHelper = ItemTouchHelper(callback)
-        itemTouchHelper.attachToRecyclerView(recyclerView)
+        val callback = MessageTouchHelperCallback(messageAdapter) // 터치 헬퍼 콜백 초기화
+        val itemTouchHelper = ItemTouchHelper(callback) // 아이템 터치 헬퍼 초기화
+        itemTouchHelper.attachToRecyclerView(recyclerView) // RecyclerView에 아이템 터치 헬퍼 연결
 
         summarizeButton.setOnClickListener {
             val inputMessage = inputText.text.toString()
             if (inputMessage.isNotEmpty()) {
-                addMessage(inputMessage, isSummary = false)
-                sendDataToServer(inputMessage)
-                inputText.text.clear()
+                addMessage(inputMessage, isSummary = false) // 메시지 추가
+                sendDataToServer(inputMessage) // 서버로 데이터 전송
+                inputText.text.clear() // 입력 텍스트 초기화
             }
         }
 
@@ -105,20 +106,20 @@ class MainActivity : AppCompatActivity() {
             val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply {
                 putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             }
-            startActivityForResult(galleryIntent, SELECT_IMAGE_REQUEST)
+            startActivityForResult(galleryIntent, SELECT_IMAGE_REQUEST) // 갤러리 인텐트 시작
         }
 
         captureButton.setOnClickListener {
             println("사진 찍기")
-            takePhotoAndSave()
+            takePhotoAndSave() // 사진 찍기 및 저장
         }
 
         crawlButton.setOnClickListener {
-            showUrlInputDialog()
+            showUrlInputDialog() // URL 입력 다이얼로그 표시
         }
 
         if (!hasRequiredPermissions()) {
-            requestRequiredPermissions()
+            requestRequiredPermissions() // 필수 권한 요청
         }
     }
 
@@ -126,29 +127,29 @@ class MainActivity : AppCompatActivity() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("크롤링할 URL 입력")
 
-        val inputView = layoutInflater.inflate(R.layout.dialog_url_input, null)
-        val urlEditText = inputView.findViewById<EditText>(R.id.urlEditText)
+        val inputView = layoutInflater.inflate(R.layout.dialog_url_input, null) // URL 입력 뷰 초기화
+        val urlEditText = inputView.findViewById<EditText>(R.id.urlEditText) // URL 입력 텍스트 초기화
         builder.setView(inputView)
 
         builder.setPositiveButton("OK") { dialog, which ->
             val url = urlEditText.text.toString()
             if (url.isNotEmpty()) {
-                startCrawling(url)
+                startCrawling(url) // 크롤링 시작
             } else {
-                Toast.makeText(this@MainActivity, "URL을 입력하세요.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "URL을 입력하세요.", Toast.LENGTH_SHORT).show() // URL 입력 요청
             }
         }
 
         builder.setNegativeButton("취소") { dialog, which ->
-            dialog.dismiss()
+            dialog.dismiss() // 다이얼로그 닫기
         }
 
         val dialog = builder.create()
-        dialog.show()
+        dialog.show() // 다이얼로그 표시
     }
 
     private fun startCrawling(url: String) {
-        FetchNewsTask().execute(url)
+        FetchNewsTask().execute(url) // 뉴스 크롤링 작업 시작
     }
 
     private inner class FetchNewsTask : AsyncTask<String, Void, String>() {
@@ -173,29 +174,29 @@ class MainActivity : AppCompatActivity() {
                         text = text.replace(Regex("\\[.*?\\]"), "")
                         text = text.replace(Regex("\\{.*?\\}"), "")
 
-                        contentBuilder.append(text).append("\n")
+                        contentBuilder.append(text).append("\n") // 텍스트 추가
                     }
                 }
-                contentBuilder.toString()
+                contentBuilder.toString() // 크롤링 결과 반환
             } catch (e: IOException) {
                 e.printStackTrace()
                 Log.e("News Fetch Error", "Failed to fetch news content")
-                null
+                null // 크롤링 실패 시 null 반환
             }
         }
         override fun onPostExecute(result: String?) {
             super.onPostExecute(result)
             if (result != null) {
-                // 크롤링한 데이터를 inputText에 설정
-                inputText.setText(result.toString())
+                inputText.setText(result.toString()) // 크롤링 결과를 입력 텍스트에 설정
             } else {
-                Toast.makeText(this@MainActivity, "뉴스 내용을 가져오지 못했습니다.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "뉴스 내용을 가져오지 못했습니다.", Toast.LENGTH_SHORT).show() // 실패 메시지 표시
             }
         }
     }
+
     private fun takePhotoAndSave() {
         val photoFile: File? = try {
-            createImageFile()
+            createImageFile() // 이미지 파일 생성
         } catch (ex: IOException) {
             ex.printStackTrace()
             null
@@ -206,21 +207,21 @@ class MainActivity : AppCompatActivity() {
                 "com.example.myapplication.fileprovider",
                 it
             )
-            val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE) // 사진 촬영 인텐트 생성
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
-            startActivityForResult(takePictureIntent, CAPTURE_IMAGE_REQUEST)
+            startActivityForResult(takePictureIntent, CAPTURE_IMAGE_REQUEST) // 사진 촬영 인텐트 시작
         }
     }
 
     private fun createImageFile(): File {
-        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date()) // 타임스탬프 생성
+        val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES) // 저장 디렉토리 설정
         return File.createTempFile(
             "JPEG_${timeStamp}_",
             ".jpg",
             storageDir
         ).apply {
-            currentPhotoPath = absolutePath
+            currentPhotoPath = absolutePath // 현재 사진 경로 설정
         }
     }
 
@@ -271,22 +272,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val combinedText = StringBuilder()
+    private val combinedText = StringBuilder() // 텍스트 결합을 위한 StringBuilder
 
     private fun extractTextAndUploadImage(uri: Uri) {
-        val image = InputImage.fromFilePath(this, uri)
-        val recognizer = TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build())
+        val image = InputImage.fromFilePath(this, uri) // 이미지 파일 경로로부터 InputImage 생성
+        val recognizer = TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build()) // 텍스트 인식 클라이언트 생성
 
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
-                combinedText.append(visionText.text).append("\n")
+                combinedText.append(visionText.text).append("\n") // 인식된 텍스트 추가
                 processedImages++
-                println("pro" + processedImages + "total" + totalImages)
                 if (processedImages == totalImages) {
                     runOnUiThread {
-                        addTextMessage(combinedText.toString())
-                        sendDataToServer(combinedText.toString())
-                        combinedText.clear()  // 성공 후 텍스트 초기화
+                        addTextMessage(combinedText.toString()) // 텍스트 메시지 추가
+                        sendDataToServer(combinedText.toString()) // 서버로 데이터 전송
+                        combinedText.clear() // 텍스트 초기화
                     }
                 }
             }
@@ -296,14 +296,15 @@ class MainActivity : AppCompatActivity() {
                 if (processedImages == totalImages) {
                     runOnUiThread {
                         if (combinedText.isNotEmpty()) {
-                            addTextMessage(combinedText.toString())
-                            sendDataToServer(combinedText.toString())
+                            addTextMessage(combinedText.toString()) // 텍스트 메시지 추가
+                            sendDataToServer(combinedText.toString()) // 서버로 데이터 전송
                         }
-                        combinedText.clear()  // 실패 후에도 텍스트 초기화
+                        combinedText.clear() // 텍스트 초기화
                     }
                 }
             }
     }
+
     private fun hasRequiredPermissions(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
@@ -322,27 +323,32 @@ class MainActivity : AppCompatActivity() {
             REQUEST_PERMISSIONS
         )
     }
+
     private fun addMessage(content: String, isSummary: Boolean) {
         val viewType = if (isSummary) VIEW_TYPE_SUMMARY else VIEW_TYPE_TEXT
-        messages.add(Message(textContent = content, isSummary = isSummary, viewType = viewType))
-        messageAdapter.notifyItemInserted(messages.size - 1)
-        recyclerView.scrollToPosition(messages.size - 1)
+        messages.add(Message(textContent = content, isSummary = isSummary, viewType = viewType)) // 메시지 리스트에 추가
+        messageAdapter.notifyItemInserted(messages.size - 1) // 어댑터에 변경사항 알림
+        recyclerView.scrollToPosition(messages.size - 1) // 마지막 메시지로 스크롤
     }
+
     private fun addImageMessage(imageUri: Uri) {
-        messages.add(Message(imageUri = imageUri, isSummary = false, viewType = VIEW_TYPE_IMAGE))
-        messageAdapter.notifyItemInserted(messages.size - 1)
-        recyclerView.scrollToPosition(messages.size - 1)
+        messages.add(Message(imageUri = imageUri, isSummary = false, viewType = VIEW_TYPE_IMAGE)) // 이미지 메시지 추가
+        messageAdapter.notifyItemInserted(messages.size - 1) // 어댑터에 변경사항 알림
+        recyclerView.scrollToPosition(messages.size - 1) // 마지막 메시지로 스크롤
     }
+
     private fun addTextMessage(text: String) {
-        messages.add(Message(textContent = text, isSummary = false, viewType = VIEW_TYPE_TEXT))
-        messageAdapter.notifyItemInserted(messages.size - 1)
-        recyclerView.scrollToPosition(messages.size - 1)
+        messages.add(Message(textContent = text, isSummary = false, viewType = VIEW_TYPE_TEXT)) // 텍스트 메시지 추가
+        messageAdapter.notifyItemInserted(messages.size - 1) // 어댑터에 변경사항 알림
+        recyclerView.scrollToPosition(messages.size - 1) // 마지막 메시지로 스크롤
     }
+
     private fun addSummaryMessage(summary: String) {
-        messages.add(Message(textContent = summary, isSummary = true, viewType = VIEW_TYPE_SUMMARY))
-        messageAdapter.notifyItemInserted(messages.size - 1)
-        recyclerView.scrollToPosition(messages.size - 1)
+        messages.add(Message(textContent = summary, isSummary = true, viewType = VIEW_TYPE_SUMMARY)) // 요약 메시지 추가
+        messageAdapter.notifyItemInserted(messages.size - 1) // 어댑터에 변경사항 알림
+        recyclerView.scrollToPosition(messages.size - 1) // 마지막 메시지로 스크롤
     }
+
     private fun sendDataToServer(data: String?) {
         Log.d("NetworkCall", "Sending data to server with data: $data")
         val port = 5001
@@ -380,10 +386,10 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 withContext(Dispatchers.Main) {
-                    addSummaryMessage(response.toString().trim())
+                    addSummaryMessage(response.toString().trim()) // 서버 응답을 요약 메시지로 추가
                 }
 
-                socket.close()
+                socket.close() // 소켓 닫기
             } catch (e: IOException) {
                 Log.e("NetworkCall", "Error in network call", e)
                 e.printStackTrace()
